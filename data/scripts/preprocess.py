@@ -11,7 +11,7 @@ if __name__ == '__main__':
         "data_version":"V01",
         # "data_version":"28Article_V02",
         # 'artId':'nyt://article/f7ca9bef-99d8-58cd-a394-1ab584c3dd25',
-        "cores" : 1,
+        "cores" : 8,
         # "usecols" : ["commentBody","commentID","parentID","articleID"]
         "usecols" : ["text","class",'class_label']
     }
