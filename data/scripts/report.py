@@ -17,13 +17,18 @@ def evaluation_metrics(df,reportdf,clusterlabel,start):
 
 def update_report(datapath,reportdf,classDict):
     df = pd.read_excel(datapath)
+    _,g = load_data(datapath[:-5]+".pkl")
+    numofedges = len(g.edges)
+    numofnodes = len(g.nodes)
     clusters = df['Louvain_modularity'].unique().tolist()
     start = len(reportdf)
     reportdf.loc[0+start] = None
     reportdf.loc[1+start] = None
     name = datapath.split('\\')[-1].split('.xlsx')[0].split("_")
-    reportdf.loc[0+start]['model'] = f"{name[0]}_{name[3]}_{name[4]}_{name[6]}_{name[7]}"
+    reportdf.loc[0+start]['model'] = f"{name[4]}_{name[6]}_{name[7]}_{name[0]}_{name[3]}"
     reportdf.loc[0+start][f'num_of_cl'] = len(clusters)
+    reportdf.loc[0+start][f'num_of_edges'] = numofedges
+    reportdf.loc[0+start][f'num_of_nodes'] = numofnodes
     clusterlabel = [None]*5
     for cl in clusters:
         counts = [0,0,0,0,0]
@@ -46,7 +51,7 @@ if __name__=="__main__":
     reportpath = f"../output/bbc_report.xlsx"
     classDict = {"business":0,"entertainment":1,"politics":2,"sport":3,"tech":4}
     path = f'../output'
-    reportdf = pd.DataFrame(columns=['model','num_of_cl','accuracy', 'macro avg', 'weighted avg'])
+    reportdf = pd.DataFrame(columns=['model','num_of_cl','num_of_nodes','num_of_edges','accuracy', 'macro avg', 'weighted avg'])
     #
     # if reportpath.split("/")[-1] not in os.listdir(f"../output"):
     #     reportdf = pd.DataFrame(columns=['model','num_of_cl','accuracy', 'macro avg', 'weighted avg'])

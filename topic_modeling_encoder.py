@@ -7,9 +7,9 @@ from data.scripts.utils import *
 
 if __name__=="__main__":
     data_version = "V01"
-    modelname = 'lda'
-    ntopics = f"100"
-    model_version = f"7"
+    modelname = 'wntm'
+    ntopics = f"50"
+    model_version = f"14"
     # modelname='wntm'
     datapath = f"data/bbc_preprocessed_data_{data_version}.pkl"
     topicspath = f"C:/Users/RAKA/Documents/NLP/topic modeling/STTM-master_java/results/{modelname}_V{ntopics}_{model_version}.theta"
