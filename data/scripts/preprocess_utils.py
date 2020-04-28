@@ -16,9 +16,8 @@ def preprcess_func(data,numbers,return_dict,prccName):
         text = removeHashtagInFrontOfWord(text) # Technique 1 # I
         text = replaceSlang(text) # Technique 2: replaces slang words and abbreviations with their equivalents
         text = replaceContraction(text) # Technique 3: replaces contractions to their equivalents
-
         # text = replaceAtUser(text) # Technique 1
-        # text = removeNumbers(text) # Technique 4: remove integers from text
+        text = removeNumbers(text) # Technique 4: remove integers from text
         # text = removeEmoticons(text) # removes emoticons from text # I attention
         # text = replaceMultiExclamationMark(text) # Technique 5: replaces repetitions of exlamation marks with the tag "multiExclamation"
         # text = replaceMultiQuestionMark(text) # Technique 5: replaces repetitions of question marks with the tag "multiQuestion"

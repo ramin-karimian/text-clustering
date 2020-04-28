@@ -63,14 +63,14 @@ def convert_emb(w2i , emb , wordVectorspath):
 if __name__=="__main__":
 
     data_version="V01"
-    dataset = "bbc"
+    dataset = "cran"
     datapath = f'../{dataset}_preprocessed_data_{data_version}.pkl'
     # embpath=f"C:/Users/RAKA/Documents/metro_data/data/source_data/embeddings_index(from_GoogleNews-vectors-negative300).pkl"
     # if oneOrTotal not in os.listdir(f"output_data"): os.mkdir(f"output_data/{oneOrTotal}")
-    if data_version not in os.listdir(f"../output"): os.mkdir(f"../output/{data_version}")
-    corpuspath=f"../output/{data_version}/{dataset}_corpus_{data_version}.txt"
-    corpusIdspath=f"../output/{data_version}/{dataset}_corpusIds_{data_version}.txt"
-    datasavepath=f"../output/{data_version}/{dataset}_preprocessed_data_{data_version}.pkl"
+    if data_version not in os.listdir(f"../output/{dataset}/"): os.mkdir(f"../output/{dataset}/{data_version}")
+    corpuspath=f"../output/{dataset}/{data_version}/{dataset}_corpus_{data_version}.txt"
+    corpusIdspath=f"../output/{dataset}/{data_version}/{dataset}_corpusIds_{data_version}.txt"
+    datasavepath=f"../output/{dataset}/{data_version}/{dataset}_preprocessed_data_{data_version}.pkl"
 
     df = load_data(datapath)
 

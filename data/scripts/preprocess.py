@@ -4,16 +4,19 @@ from data.scripts.preprocess_utils import *
 
 if __name__ == '__main__':
     confiq = {
-        "datapath" : "../bbc.csv",
+        # "datapath" : "../twitter.csv",
+        "datapath" : "../cisi.csv",
         # "datapath" : "source_data/Tags.xlsx",
         # "datapath" : "source_data/28_article_itself.txt",
-        "preprocessed_datapath" : "../bbc_preprocessed_data",
+        "preprocessed_datapath" : "../cisi_preprocessed_data",
         "data_version":"V01",
         # "data_version":"28Article_V02",
         # 'artId':'nyt://article/f7ca9bef-99d8-58cd-a394-1ab584c3dd25',
-        "cores" : 8,
+        "cores" : 10,
         # "usecols" : ["commentBody","commentID","parentID","articleID"]
+        # "usecols" : ["text","class",'class_label']
         "usecols" : ["text","class",'class_label']
+        # "usecols" : ["text","tweet_id","class",'class_label']
     }
 
     starttime = time.time()

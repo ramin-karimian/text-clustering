@@ -47,7 +47,7 @@ def update_report(datapath,reportdf,classDict):
     return reportdf
 
 if __name__=="__main__":
-    datapath = f"../output/bbc_preprocessed_data_V01_use_network_th_0.5.xlsx"
+    # datapath = f"../output/bbc_preprocessed_data_V01_use_network_th_0.5.xlsx"
     reportpath = f"../output/bbc_report.xlsx"
     classDict = {"business":0,"entertainment":1,"politics":2,"sport":3,"tech":4}
     path = f'../output'

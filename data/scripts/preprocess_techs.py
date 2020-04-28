@@ -1,4 +1,4 @@
-# from spellchecker import SpellChecker
+from spellchecker import SpellChecker
 import re
 from functools import partial
 from redditscore.tokenizer import CrazyTokenizer
@@ -43,8 +43,14 @@ def removeUnicode(text):
     text = re.sub(r'[^\x00-\x7f]',r'',text)
     return text
 
+def replaceAtUser(text):
+    """ Replaces "@user" with "username" """
+#    text = re.sub('@[^\s]+','atUser',text)
+    text = re.sub('@[^\s]+','',text)
+    return text
+
 def replaceURL(text):
-    text = re.sub('((www\.[^\s]+)|(https?://[^\s]+))','url',text)  # url deleted
+    text = re.sub('((www\.[^\s]+)|(https?://[^\s]+))','',text)  # url deleted
     return text
 
 def replaceEmail(text):
@@ -55,6 +61,11 @@ def replaceEmail(text):
 def removeHashtagInFrontOfWord(text):
     """ Removes hastag in front of a word """
     text = re.sub(r'#([^\s]+)', r'\1', text)
+    return text
+
+def removeNumbers(text):
+    """ Removes integers """
+    text = ''.join([i for i in text if not i.isdigit()])
     return text
 
 def replaceElongated(word):
@@ -69,6 +80,10 @@ def replaceElongated(word):
     else:
         return repl_word
 
+def removeEmoticons(text):
+    """ Removes emoticons from text """
+    text = re.sub(':\)|;\)|:-\)|\(-:|:-D|=D|:P|xD|X-p|\^\^|:-*|\^\.\^|\^\-\^|\^\_\^|\,-\)|\)-:|:\'\(|:\(|:-\(|:\S|T\.T|\.\_\.|:<|:-\S|:-<|\*\-\*|:O|=O|=\-O|O\.o|XO|O\_O|:-\@|=/|:/|X\-\(|>\.<|>=\(|D:', '', text)
+    return text
 
 def spellCorection(word):
     spell = SpellChecker()
