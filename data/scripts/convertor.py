@@ -108,7 +108,7 @@ def create_rep(dataset,df):
 
 if __name__=="__main__":
 
-    data_version="V03"
+    data_version="V02"
     # dataset = "cran_cisi_pubmed"
     # dataset = "bbcsport"
     # dataset = "cran_pubmed"

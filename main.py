@@ -2,7 +2,7 @@ import networkx as nx
 from time import time as tm
 import os
 from utils_functions.utils import *
-from utils_functions.create_network import create_network
+from utils_functions.create_network import create_network , create_network_1by1
 from utils_functions.modify import modify
 from utils_functions.multi_processing import centrality_multi_process , network_multi_process , one_processing_func
 from utils_functions.create_net_file import create_net_file
@@ -16,8 +16,11 @@ def create_network_phase(name,threshold,datapath,savepath):
     print(name,"  ",threshold)
     if name in ['tf','tfidf'] : data = load_data(datapath).toarray().tolist()
     else:  data = load_data(datapath)[0]
-    sims_df,sims = similarity(data)
-    g = create_network(sims_df,threshold)
+    if len(data)<=50000:
+        sims_df,sims = similarity(data)
+        g = create_network(sims_df,threshold)
+    else:
+        g = create_network_1by1(data,threshold)
     save_data(savepath,[None,g])
     print("edges: ",len(g.edges()))
     print("nodes: ",len(g.nodes()))
