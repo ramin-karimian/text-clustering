@@ -13,7 +13,7 @@ if __name__=="__main__":
         dfch = pd.read_csv(os.path.join(path,f),header = None)
         dfch.columns = ['date','tweet_id','text' ]
 
-        dfch['text'].apply(lambda x:x[2:-1])
+        dfch['text'] = dfch['text'].apply(lambda x:x[2:-1])
         dfch['class'] = f.split('.')[0][1:]
         dfch['class_label'] = label
         label = label + 1

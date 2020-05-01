@@ -25,14 +25,15 @@ def update_report(datapath,reportdf,classDict):
     reportdf.loc[0+start] = None
     reportdf.loc[1+start] = None
     name = datapath.split('\\')[-1].split('.xlsx')[0].split("_")
-    reportdf.loc[0+start]['model'] = f"{name[4]}_{name[6]}_{name[7]}_{name[0]}_{name[3]}"
+    if len(name)==8: reportdf.loc[0+start]['model'] = f"{name[4]}_{name[6]}_{name[7]}_{name[0]}_{name[3]}"
+    else:  reportdf.loc[0+start]['model'] = f"{name[-4]}_{name[-2]}_{name[-1]}_{'-'.join(name[0:3])}_{name[-5]}"
     reportdf.loc[0+start][f'num_of_cl'] = len(clusters)
     reportdf.loc[0+start][f'num_of_edges'] = numofedges
     reportdf.loc[0+start][f'num_of_nodes'] = numofnodes
-    clusterlabel = [None]*5
+    clusterlabel = [None]*len(clusters)
     for cl in clusters:
-        counts = [0,0,0,0,0]
-        percentages = [0,0,0,0,0]
+        counts = [0]*len(classDict)
+        percentages = [0.0]*len(classDict)
         if f'cl_{cl+1}' not in reportdf.keys():reportdf[f'cl_{cl+1}'] = None
         # class_report = df[df['Louvain_modularity']==cl]['class'].value_counts()
         class_label__report = df[df['Louvain_modularity']==cl]['class_label'].value_counts()
@@ -41,16 +42,26 @@ def update_report(datapath,reportdf,classDict):
             percentages[classDict[x]] = round(class_label__report[x] / sum(class_label__report.values),2)
         reportdf.loc[0+start][f'cl_{cl+1}'] = counts
         reportdf.loc[1+start][f'cl_{cl+1}'] = percentages
-        if len(clusters)==len(classDict):
-            clusterlabel[cl] = np.argmax(counts)
-    if len(clusters)==len(classDict): reportdf = evaluation_metrics(df,reportdf,clusterlabel,start)
+        # if len(clusters)==len(classDict):
+        #     clusterlabel[cl] = np.argmax(counts)
+        clusterlabel[cl] = np.argmax(counts)
+    # if len(clusters)==len(classDict): reportdf = evaluation_metrics(df,reportdf,clusterlabel,start)
+    reportdf = evaluation_metrics(df,reportdf,clusterlabel,start)
     return reportdf
 
 if __name__=="__main__":
     # datapath = f"../output/bbc_preprocessed_data_V01_use_network_th_0.5.xlsx"
-    reportpath = f"../output/bbc_report.xlsx"
-    classDict = {"business":0,"entertainment":1,"politics":2,"sport":3,"tech":4}
-    path = f'../output'
+    dataset = 'cran_cisi_pubmed'
+    # dataset = 'bbcsport'
+    classDict ={
+        'bbc':{"business":0,"entertainment":1,"politics":2,"sport":3,"tech":4},
+        'bbcsport':{"athletics":0,"cricket":1,"football":2,"rugby":3,"tennis":4},
+        'cran_cisi_pubmed':{"cran":0,"cisi":1,"pubmed":2},
+        # 'twitter':{"cran":0,"cisi":1,"pubmed":2}
+    }
+    data_version = "V02"
+    reportpath = f"../output/{dataset}/{data_version}/{dataset}_{data_version}_report.xlsx"
+    path = f'../output/{dataset}/{data_version}/network'
     reportdf = pd.DataFrame(columns=['model','num_of_cl','num_of_nodes','num_of_edges','accuracy', 'macro avg', 'weighted avg'])
     #
     # if reportpath.split("/")[-1] not in os.listdir(f"../output"):
@@ -62,6 +73,6 @@ if __name__=="__main__":
         if not filename.endswith('.xlsx'): continue
         if filename.endswith("report.xlsx") : continue
         datapath = os.path.join(path,filename)
-        reportdf = update_report(datapath,reportdf,classDict)
+        reportdf = update_report(datapath,reportdf,classDict[dataset])
 
     reportdf.to_excel(reportpath,index=None)

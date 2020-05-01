@@ -4,10 +4,16 @@ from functools import partial
 from redditscore.tokenizer import CrazyTokenizer
 from nltk.corpus import wordnet , names
 from nltk.corpus import stopwords
+from data.scripts.utils import *
 import pandas as pd
+from nltk import pos_tag
+
+# embpath =f"G:\projects_backup\pj1-hashtag-recommendation\pickles\embeddings_index(from_GoogleNews-vectors-negative300).pkl"
+# emb = load_data(embpath)
+# emb = list(emb.keys())
 
 stop_words = stopwords.words('english')
-stop_words.extend([])
+stop_words.extend(['rt'])
 [stop_words.remove(x) for x in
                 [  'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn',
                    "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn',
@@ -41,6 +47,8 @@ def removeUnicode(text):
     """ Removes unicode strings like "\u002c" and "x96" """
     text = re.sub(r'(\\u[0-9A-Fa-f]+)',r'', text)
     text = re.sub(r'[^\x00-\x7f]',r'',text)
+    text = re.sub(r'(\\x[a-zA-Z0-9]{2})',r'', text)
+    text = re.sub(r'(\\[nr]+)',r' ', text)
     return text
 
 def replaceAtUser(text):
@@ -90,13 +98,25 @@ def spellCorection(word):
     word = spell.correction(word)
     return word
 
-def tokenize(text):
+def remove_pos_taged_tokens(tokens,remove_pos_tags):
+    taged_tokens = pos_tag(tokens)
+    for i in range(len(taged_tokens)-1,-1,-1):
+        if taged_tokens[i][1] in remove_pos_tags:
+            del tokens[i]
+    return tokens
+
+def tokenize(text,remove_pos_tags):
     tokenizer = CrazyTokenizer()
     tokens = tokenizer.tokenize(text)
+
+    if len(remove_pos_tags) > 0 :
+        tokens = remove_pos_taged_tokens(tokens,remove_pos_tags)
+
     preprocessed_tokens = []
     for w in tokens:
         w = replaceElongated(w)
         if w not in stop_words:
+            # if w in emb:
             # w = spellCorection(w)
             preprocessed_tokens.append(w)
     return preprocessed_tokens

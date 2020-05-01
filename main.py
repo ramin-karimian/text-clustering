@@ -27,14 +27,12 @@ def centrality_phase(g,betweenness_processes,path):
     # _,g = load_data(savepath)
     print("edges: ",len(g.edges()))
     print("nodes: ",len(g.nodes()))
-    funcList=[nx.degree_centrality, nx.pagerank,
-              nx.eigenvector_centrality_numpy, my_closeness_centrality]
-    # funcList=[nx.degree_centrality, nx.pagerank, nx.betweenness_centrality,
+    funcList=[nx.degree_centrality]
+    # funcList=[nx.degree_centrality, nx.pagerank,
     #           nx.eigenvector_centrality_numpy, my_closeness_centrality]
     return_dict = centrality_multi_process(funcList,[g])
-    return_dict = one_processing_func(g,betweenness_centrality_parallel,return_dict,processes=betweenness_processes)
+    # return_dict = one_processing_func(g,betweenness_centrality_parallel,return_dict,processes=betweenness_processes)
     return_dict = modify(g,return_dict,path)
-    # return_dict = modify(g,return_dict,oneOrTotal)
     save_data(savepath,[return_dict,g])
     pd.DataFrame(return_dict).transpose().to_excel(savepath[:-4]+".xlsx")
     return return_dict,g
@@ -60,9 +58,12 @@ if __name__ == "__main__":
         dataset = paramsdf['dataset'][iter]
         betweenness_processes = paramsdf['betweenness_processes'][iter]
 
-        datapath = f"data/{dataset}_preprocessed_data_{data_version}_{name}.pkl"
-        savepath = f"data/output/{dataset}_preprocessed_data_{data_version}_{name}_network_th_{threshold}.pkl"
-        path = f"data/{dataset}_preprocessed_data_{data_version}.pkl"
+        datapath = f"data/output/{dataset}/{data_version}/representation/{dataset}_preprocessed_data_{data_version}_{name}.pkl"
+        savepath = f"data/output/{dataset}/{data_version}/network/{dataset}_preprocessed_data_{data_version}_{name}_network_th_{threshold}.pkl"
+        path = f"data/output/{dataset}/{data_version}/{dataset}_preprocessed_data_{data_version}.pkl"
+
+        if "network" not in os.listdir("/".join(savepath.split("/")[:4])):
+            os.mkdir(os.path.join("/".join(savepath.split("/")[:4]),"network"))
 
         print(f"\ncreate_network _ {threshold} _ {name} _\ndatapath {datapath}\nsavepath {savepath}" )
         g = create_network_phase(name,threshold,datapath,savepath)

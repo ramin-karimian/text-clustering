@@ -13,5 +13,5 @@ if __name__=="__main__":
     absDocs = return_list_of_docs(qr,datapath)
     for text in absDocs:
         text = re.sub(r"\n",' ',text)
-        df.loc[len(df)] = text,0,'cisi'
+        df.loc[len(df)] = text,1,'cisi'
     df.to_csv(savepath)

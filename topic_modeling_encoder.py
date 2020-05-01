@@ -6,14 +6,17 @@ from data.scripts.utils import *
 
 
 if __name__=="__main__":
-    data_version = "V01"
-    modelname = 'wntm'
-    ntopics = f"50"
-    model_version = f"14"
-    # modelname='wntm'
-    datapath = f"data/bbc_preprocessed_data_{data_version}.pkl"
-    topicspath = f"C:/Users/RAKA/Documents/NLP/topic modeling/STTM-master_java/results/{modelname}_V{ntopics}_{model_version}.theta"
-    savepath = f"data/bbc_preprocessed_data_{data_version}_{modelname}{model_version}.pkl"
+    dataset = "twitter"
+    data_version = "V02"
+    modelname = 'LDA'
+    ntopics = f"20"
+    model_version = f"12"
+    # datapath = f"data/{dataset}_preprocessed_data_{data_version}.pkl"
+    datapath = f"data/output/{dataset}/{data_version}/{dataset}_preprocessed_data_{data_version}.pkl"
+    # topicspath = f"C:/Users/RAKA/Documents/NLP/topic modeling/STTM-master_java/results/{modelname}_V{ntopics}_{model_version}.theta"
+    topicspath = f"C:/Users/RAKA/Documents/NLP/topic modeling/STTM-master_java/results/{modelname}_{dataset}_{data_version}_T{ntopics}_{model_version}.theta"
+    # savepath = f"data/{dataset}_preprocessed_data_{data_version}_{modelname}{model_version}.pkl"
+    savepath = f"data/output/{dataset}/{data_version}/representation/{dataset}_preprocessed_data_{data_version}_{modelname}{ntopics}-{model_version}.pkl"
     df = load_data(datapath)
     with open(topicspath,'r') as f:
         lns = f.readlines()

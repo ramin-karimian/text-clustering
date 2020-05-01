@@ -22,7 +22,7 @@ if __name__=="__main__":
             continue
         id = node.find('PubmedData').find("ArticleIdList").find("ArticleId").text if node is not None else None
         title = node.find('MedlineCitation').find('Article').find('ArticleTitle').text if node is not None else None
-        rows.append({"text": text, "title": title,"id": id , 'class':'pubmed','class_label':0})
+        rows.append({"text": text, "title": title,"id": id , 'class':2,'class_label':'pubmed'})
 
     df = pd.DataFrame(rows, columns = df_cols)
     df.to_csv(savepath)
