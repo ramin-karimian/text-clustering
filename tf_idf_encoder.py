@@ -9,11 +9,13 @@ from data.scripts.utils import *
 
 if __name__=="__main__":
     # dataset = "bbcsport"
-    dataset = "cran_cisi_pubmed"
+    dataset = "mixed"
+    # dataset = "cran-cisi-pubmed"
     # dataset = "cran_cisi"
     # dataset = "pubmed_cisi"
     # dataset = "cran_pubmed"
     # dataset = "twitter"
+    # dataset = "twitter-cor2"
     data_version="V02"
     datapath = f"data/output/{dataset}/{data_version}/{dataset}_preprocessed_data_{data_version}.pkl"
     # savepath = f"data/bbc_preprocessed_data_{data_version}"

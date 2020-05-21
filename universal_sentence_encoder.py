@@ -46,12 +46,15 @@ def compute_USE_embeddings(data ,conf):
 
 if __name__=="__main__":
     # dataset = "bbcsport"
-    # dataset = "cran_cisi_pubmed"
+    dataset = "mixed"
+    # dataset = "bbcsport-small"
+    # dataset = "cran-cisi-pubmed"
     # dataset = "cran_cisi"
     # dataset = "pubmed_cisi"
     # dataset = "cran_pubmed"
-    dataset = "twitter"
-    data_version = "V03"
+    # dataset = "twitter-cor2"
+    # dataset = "twitter"
+    data_version = "V02"
     conf = {
         # 'data_version':"V_01",
         'bachsize':1000,

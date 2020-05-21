@@ -61,9 +61,11 @@ def load(datapath,extention=False,article="total"):
                 # return df
         return dfs
 
-def check_print(i,step=1000,time=False):
+def check_print(i,message=None,step=1000,time=False):
+    if message == None :
+        message = i
     if i%step==0:
         if time:
-            print(i," time(min): ",(tm()-time)/60)
+            print(message," time(min): ",(tm()-time)/60)
         else:
-            print(i)
+            print(message)

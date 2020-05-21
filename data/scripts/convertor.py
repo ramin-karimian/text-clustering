@@ -76,7 +76,7 @@ def convert(data_version,dataset,df,rep):
     return df
 
 def combine(dataset,data_version):
-    datasets = dataset.split("_")
+    datasets = dataset.split("-")
     df_total = ''
     for d in datasets:
         print(d)
@@ -87,9 +87,9 @@ def combine(dataset,data_version):
         else: df_total = df
     return df_total
 
-def remove_low_dimentional_items(df,limit):
+def remove_low_dimentional_items(df,lowerlimit,upperlimit):
     for i in range(len(df['tokens'])):
-        if len(df['tokens'][i]) < limit :
+        if len(df['tokens'][i]) < lowerlimit or len(df['tokens'][i]) > upperlimit  :
             df.drop(i,inplace=True)
     df.index = range(len(df))
     return df
@@ -109,25 +109,31 @@ def create_rep(dataset,df):
 if __name__=="__main__":
 
     data_version="V02"
-    # dataset = "cran_cisi_pubmed"
+    # dataset = "cran-cisi-pubmed"
+    dataset = "mixed"
     # dataset = "bbcsport"
+    # dataset = "bbcsport-small"
     # dataset = "cran_pubmed"
     # dataset = "pubmed_cisi"
-    dataset = "twitter"
-    limit = 5
+    # dataset = "twitter-cor2"
+    # dataset = "twitter"
+    lowerlimit = 5
+    # upperlimit = 35
+    upperlimit = 1000
     # limit = 5
-    if len(dataset.split("_"))>1:
+    if len(dataset.split("-"))>1:
         df = combine(dataset,data_version)
-        df = remove_low_dimentional_items(df,limit)
+        df = remove_low_dimentional_items(df,lowerlimit,upperlimit)
         rep = create_rep(dataset,df)
 
     else:
         datapath = f'../{dataset}_preprocessed_data_{data_version}.pkl'
         df = load_data(datapath)
-    #     df = remove_low_dimentional_items(df,limit)
-    #     rep = create_rep(dataset,df)
-    #
-    # df = convert(data_version,dataset,df,rep)
+        # len([x for x in df['tokens'] if 15<=len(x )<=25])
+        df = remove_low_dimentional_items(df,lowerlimit,upperlimit)
+        rep = create_rep(dataset,df)
+
+    df = convert(data_version,dataset,df,rep)
 
 
 

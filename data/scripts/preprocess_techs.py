@@ -67,8 +67,13 @@ def replaceEmail(text):
     return text
 
 def removeHashtagInFrontOfWord(text):
-    """ Removes hastag in front of a word """
+    """ Removes hashtag in front of a word """
     text = re.sub(r'#([^\s]+)', r'\1', text)
+    return text
+
+def removeHashtagedWords(text):
+    """ Removes hashtaged words in text """
+    text = re.sub(r'#([^\s]+)', '', text)
     return text
 
 def removeNumbers(text):
@@ -105,7 +110,7 @@ def remove_pos_taged_tokens(tokens,remove_pos_tags):
             del tokens[i]
     return tokens
 
-def tokenize(text,remove_pos_tags):
+def tokenize(text,remove_pos_tags,extend_stoplist):
     tokenizer = CrazyTokenizer()
     tokens = tokenizer.tokenize(text)
 
@@ -115,7 +120,8 @@ def tokenize(text,remove_pos_tags):
     preprocessed_tokens = []
     for w in tokens:
         w = replaceElongated(w)
-        if w not in stop_words:
+        # if w not in stop_words:
+        if w not in stop_words and w not in extend_stoplist:
             # if w in emb:
             # w = spellCorection(w)
             preprocessed_tokens.append(w)

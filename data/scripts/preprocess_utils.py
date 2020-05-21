@@ -2,7 +2,7 @@ from multiprocessing import Process, Manager
 from data.scripts.preprocess_techs import *
 import numpy as np
 
-def preprcess_func(data,numbers,return_dict,prccName,remove_pos_tags):
+def preprcess_func(data,numbers,return_dict,prccName,remove_pos_tags,extend_stoplist):
     total_tokens=[]
     for x in numbers:
         text=data[x]
@@ -13,7 +13,8 @@ def preprcess_func(data,numbers,return_dict,prccName,remove_pos_tags):
         text = replaceURL(text) # Technique 1
         text = removeUnicode(text)
         text= replaceEmail(text)
-        text = removeHashtagInFrontOfWord(text) # Technique 1 # I
+        # text = removeHashtagInFrontOfWord(text) # Technique 1 # I
+        text = removeHashtagedWords(text) # Technique 1 # I
         text = replaceSlang(text) # Technique 2: replaces slang words and abbreviations with their equivalents
         text = replaceContraction(text) # Technique 3: replaces contractions to their equivalents
         text = removeNumbers(text) # Technique 4: remove integers from text
@@ -25,13 +26,18 @@ def preprcess_func(data,numbers,return_dict,prccName,remove_pos_tags):
         # text = replaceMultiStopMark(text) # Technique 5: replaces repetitions of stop marks with the tag "multiStop"
         # tokens, err = replaceProperNoun(tokens,textID)
 
-        tokens = tokenize(text,remove_pos_tags)
+        tokens = tokenize(text,remove_pos_tags,extend_stoplist)
 
         total_tokens.append((x,tokens))
         return_dict[x]=tokens
         # return_dict[f"err{prccName[-1]}"]=err
 
-def preprocess_multi_process(func,cores,data,remove_pos_tags):
+# def preprocess_multi_process(func,cores,data,remove_pos_tags):
+def preprocess_multi_process(func,conf,data):
+    remove_pos_tags = conf['remove_pos_tags']
+    cores = conf["cores"]
+    extend_stoplist = conf["extend_stoplist"]
+
     processes=[]
     manager= Manager()
     return_dict = manager.dict()
@@ -52,7 +58,7 @@ def preprocess_multi_process(func,cores,data,remove_pos_tags):
             d[i]=data["text"][i]
             # d[i]=data["Comment"][i]
 
-        p=Process(target=func,args=(d,numbers,return_dict,prccName,remove_pos_tags))
+        p=Process(target=func,args=(d,numbers,return_dict,prccName,remove_pos_tags,extend_stoplist))
         processes.append(p)
         p.start()
     for p in processes:
