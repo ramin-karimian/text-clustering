@@ -20,13 +20,16 @@ def centrality_multi_process(funcList,argList=None):
     manager= Manager()
     return_dict = manager.dict()
     func = centrality_func
-    for f in funcList:
-        # print(f.__name__)
-        p=Process(target=func,args=(argList[0],f,return_dict))
-        processes.append(p)
-        p.start()
-    for p in processes:
-        p.join()
+    if len(funcList) >0:
+        for f in funcList:
+            # print(f.__name__)
+            p=Process(target=func,args=(argList[0],f,return_dict))
+            processes.append(p)
+            p.start()
+        for p in processes:
+            p.join()
+    else:
+        return_dict['measures']={n:None for n in g.nodes()}
     return return_dict
 
 def network_func(arglist,f,return_list):

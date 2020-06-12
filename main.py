@@ -14,9 +14,10 @@ from utils_functions.my_closeness_centerality import my_closeness_centrality
 from utils_functions.my_betweenness_centrality import betweenness_centrality_parallel
 from utils_functions.community_detections import Louvain_modularity_community, label_propagation_community ,\
     infomap_community, asyn_fluidc_community, k_clique_community
-from utils_functions.clustering import average_linkage,kmeans, lda, nmf
+from utils_functions.clustering import average_linkage,kmeans, lda, ptm, nmf
 import re
 import numpy as np
+from multiprocessing import Manager , Process
 
 def load_data_forsim(datapath,name):
     if name in ['tf','tfidf'] :
@@ -28,7 +29,7 @@ def load_data_forsim(datapath,name):
         data = load_data(datapath)[0]
     return data
 
-def compute_ths(sims_df,sims,manual_th,num_steps):
+def compute_ths(sims_df,sims,manual_th,num_steps,th_map,rep):
     if not manual_th:
         mi = np.min(sims)
         ma = np.max(np.max(sims_df[sims_df !=1.0]))
@@ -40,7 +41,7 @@ def compute_ths(sims_df,sims,manual_th,num_steps):
             else:
                 break
     else:
-        ths = round(sum(sum(sims) ) / (len(sims) **2),2)
+        ths = [th_map[rep]]
     return ths
 
 def compute_ks(sims_df,sims,manual_th,num_steps):
@@ -51,17 +52,17 @@ def compute_ks(sims_df,sims,manual_th,num_steps):
         ks = 10
     return ks
 
-def compute_similarities(similarity_func,datapath,name,manual_th,num_steps):
+def compute_similarities(similarity_func,datapath,name,manual_th,num_steps,th_map,rep):
     simsfile = datapath.split("/")[-1][:-4] + f"_{similarity_func.__name__}.pkl"
     simspath = os.path.join(datapath,"../",simsfile)
     if simsfile in os.listdir(os.path.join(datapath,"../")):
         sims_df,sims = load_data(simspath)
-        ths = compute_ths(sims_df,sims,manual_th,num_steps)
+        ths = compute_ths(sims_df,sims,manual_th,num_steps,th_map,rep)
         ks = compute_ks(sims_df,sims,manual_th,num_steps)
         return ths,ks,sims_df
     data = load_data_forsim(datapath,name)
     sims_df,sims = similarity_func(data,name)
-    ths = compute_ths(sims_df,sims,manual_th,num_steps)
+    ths = compute_ths(sims_df,sims,manual_th,num_steps,th_map,rep)
     ks = compute_ks(sims_df,sims,manual_th,num_steps)
     save_data(simspath,[sims_df,sims])
     return ths,ks,sims_df
@@ -73,8 +74,6 @@ def create_network_phase(name,network_func,network_arg,sims_df,savepath):
     print("edges: ",len(g.edges()),"  nodes: ",len(g.nodes()))
     if len(g.nodes)< int(len(sims_df)*0.8):
         return g
-    create_pairs_file(g,savepath[:-4]+".pairs")
-    save_data(savepath,[None,g])
     return g
 
 def centrality_phase(g,betweenness_processes,path,savepath):
@@ -93,12 +92,13 @@ def centrality_phase(g,betweenness_processes,path,savepath):
 def community_detection_phase(community_models,return_dict,g,savepath):
     # return_dict,g= load_data(savepath)
     print("edges: ",len(g.edges()),"  nodes: ",len(g.nodes()))
-    num_cl = len(pd.DataFrame(return_dict).transpose()['class'].unique())
-    try:
-        for community_model in community_models:
-            return_dict= community_model(g,return_dict,num_cl)
-    except:
-        print(f"error in {community_model}")
+    num_cl = len( set([y for x in pd.DataFrame(return_dict).transpose()['class'].unique() for y in str(x).split(",")]))
+    # num_cl = len(pd.DataFrame(return_dict).transpose()['class'].unique())
+    # try:
+    for community_model in community_models:
+        return_dict= community_model(g,return_dict,num_cl)
+    # except:
+    #     print(f"error in {community_model}")
     save_data(savepath,[return_dict,g])
     pd.DataFrame(return_dict).transpose().to_excel(savepath[:-4]+".xlsx")
     # create_net_file(g,return_dict,savepath)
@@ -106,24 +106,71 @@ def community_detection_phase(community_models,return_dict,g,savepath):
 
 def clustering_phase(clustering_models,return_dict,g,datapath,name,savepath):
     data = load_data_forsim(datapath,name)
-    num_cl = len(pd.DataFrame(return_dict).transpose()['class'].unique())
+    # num_cl = len(pd.DataFrame(return_dict).transpose()['class'].unique())
+    num_cl = len( set([y for x in pd.DataFrame(return_dict).transpose()['class'].unique() for y in str(x).split(",")]))
+
     for clustering_model in clustering_models:
-        if clustering_model.__name__== "lda" and f"lda{num_cl}" not in name: continue
-        if clustering_model.__name__== "nmf" and f"elmo" in name: continue
+        if clustering_model.__name__== "lda" and f"LDA{num_cl}" not in name: continue
+        if clustering_model.__name__== "ptm" and f"PTM{num_cl}" not in name: continue
+        if clustering_model.__name__== "nmf" and name not in ['tf','tfidf']: continue
         return_dict = clustering_model(data,return_dict,num_cl)
     save_data(savepath,[return_dict,g])
     pd.DataFrame(return_dict).transpose().to_excel(savepath[:-4]+".xlsx")
 
+def update_return_dict(return_dict,partition,modelname):
+    for k,v in partition.items():
+        return_dict[k][modelname] = v
+    return  return_dict
+
+def commuity_and_clustering_multiprocess_func(model,clustering_models,community_models,data,g,dict,num_cl):
+    t1 = tm()
+    if model in clustering_models:
+        partition = model(data,return_dict = None,num_cl=num_cl)
+    elif model in community_models:
+        partition = model(g,return_dict = None,num_cl=num_cl)
+    dict[model.__name__] = partition
+    print(model.__name__,f" took {tm()-t1} s")
+
+def commuity_and_clustering_multiprocess(clustering_models,community_models,return_dict,g,datapath,name,savepath,model_map):
+    models = clustering_models + community_models
+    print("edges: ",len(g.edges()),"  nodes: ",len(g.nodes()))
+    data = load_data_forsim(datapath,name)
+    # num_cl = len(pd.DataFrame(return_dict).transpose()['class'].unique())
+    num_cl = len( set([y for x in pd.DataFrame(return_dict).transpose()['class'].unique() for y in str(x).split(",")]))
+    dict = Manager().dict()
+    processess= []
+    for c in range(len(models)):
+        if models[c].__name__== "lda" and f"LDA{num_cl}" not in name: continue
+        if models[c].__name__== "ptm" and f"PTM{num_cl}" not in name: continue
+        if models[c].__name__== "nmf" and name not in ['tf','tfidf']: continue
+        p = Process(target = commuity_and_clustering_multiprocess_func, args=(models[c],clustering_models,community_models,data,g,dict,num_cl) )
+        p.start()
+        processess.append(p)
+
+    for p in processess:
+        p.join()
+
+    for m in dict.keys():
+        partition = dict[m]
+        modelname = model_map[m]
+        return_dict = update_return_dict(return_dict,partition,modelname)
+
+    save_data(savepath,[return_dict,g])
+    pd.DataFrame(return_dict).transpose().to_excel(savepath[:-4]+".xlsx")
+
+
 if __name__ == "__main__":
     print(tm())
     paramspath = f"text_clustering_params.xlsx"
-    manual_th = False
+    manual_th = True
     keep_nodes = 1
-    num_steps = 10
+    num_steps = 20
     network_func = [knn,enn][1]
-    similarity_functions = [innerProductSimilarity, cosineSimilarity , euclideanSimilarity,
-                            jensenshannonSimilarity, manhattanSimilarity,softcosineSimliarity,
-                            # WMDSimilarity
+    # similarity_functions = [innerProductSimilarity, cosineSimilarity , euclideanSimilarity,
+    #                         jensenshannonSimilarity, manhattanSimilarity,softcosineSimliarity,
+    #                         # WMDSimilarity
+    #                         ]
+    similarity_functions = [cosineSimilarity
                             ]
 
     # num_steps = 1
@@ -134,7 +181,34 @@ if __name__ == "__main__":
                         # k_clique_community
                         ]
 
-    clustering_models = [average_linkage, kmeans, lda, nmf]
+    clustering_models = [average_linkage, kmeans, lda, ptm,
+                         # nmf
+                         ]
+    model_map = {
+        Louvain_modularity_community.__name__:"Louvain_modularity",
+        label_propagation_community.__name__:"label_propagation",
+        infomap_community.__name__:"infomap",
+        asyn_fluidc_community.__name__:"asyn_fluidc",
+        average_linkage.__name__:"average_linkage",
+        kmeans.__name__:"kmeans",
+        lda.__name__:"lda",
+        ptm.__name__:"ptm",
+    }
+    th_map={
+        'use':0.6,
+        'bert':0.6,
+        'tf':0.04,
+        'tfidf':0.04,
+        'elmo-default':0.6,
+        'PTM3':0.94,
+        'PTM20':0.6,
+        'PTM50':0.3,
+        'PTM100':0.2,
+        'LDA3':0.84,
+        'LDA20':0.3,
+        'LDA50':0.3,
+        'LDA100':0.3,
+    }
     paramsdf = pd.read_excel(paramspath)
     prev_dataset = None
     for iter in range(len(paramsdf)):
@@ -159,7 +233,7 @@ if __name__ == "__main__":
             # if dataset != prev_dataset:
             #     ths ,sims_df = compute_similarities(similarity_func,datapath,name,manual_th,num_steps)
             #     prev_dataset = dataset
-            ths,ks ,sims_df = compute_similarities(similarity_func,datapath,name,manual_th,num_steps)
+            ths,ks ,sims_df = compute_similarities(similarity_func,datapath,name,manual_th,num_steps,th_map,name)
 
             if network_func.__name__=="enn":
                 network_args = ths
@@ -176,9 +250,13 @@ if __name__ == "__main__":
                 g  = create_network_phase(name,network_func,network_arg,sims_df,savepath)
                 if len(g.nodes)< int(len(sims_df)*keep_nodes):
                     break
+                else:
+                    create_pairs_file(g,savepath[:-4]+".pairs")
+                    save_data(savepath,[None,g])
                 print(f"  centrality _ {network_arg} _ {name} " )
                 return_dict,g = centrality_phase(g,betweenness_processes,path,savepath)
 
+                t1=tm()
                 print(f"  community_detection _ {network_arg} _ {name} " )
                 return_dict, g = community_detection_phase(community_models,return_dict,g,savepath)
 
@@ -186,5 +264,10 @@ if __name__ == "__main__":
                     continue
                 print(f"  clustering _ {name} " )
                 clustering_phase(clustering_models,return_dict,g,datapath,name,savepath)
+                print(tm()-t1)
 
+                # t1=tm()
+                # print(f"  community_detection and clustering _ {network_arg} _ {name} " )
+                # commuity_and_clustering_multiprocess(clustering_models,community_models,return_dict,g,datapath,name,savepath,model_map)
+                # print(tm()-t1)
 

@@ -6,17 +6,19 @@ if __name__ == '__main__':
     # dataset = "pubmed"
     # dataset = "twitter-cor2"
     # dataset = "twitter"
-    dataset = "bbcsport-small"
+    # dataset = "bbcsport-small"
+    dataset = "reuters"
     confiq = {
         "datapath" : f"../{dataset}.csv",
         "preprocessed_datapath" : f"../{dataset}_preprocessed_data",
-        "data_version":"V01",
+        "data_version":"V02",
         'remove_pos_tags':['DT','CC','IN','PRP','PRP$','MD','WDT','WP','WP$','WRB'],
-        "cores" : 7,
+        "cores" : 14,
         # "extend_stoplist" : ["art","business","education","food","technology"],
         "extend_stoplist" : [],
         # "usecols" : ["commentBody","commentID","parentID","articleID"]
-        "usecols" : ["text","class",'class_label']
+        # "usecols" : ["text","class",'class_label']
+        "usecols" : ["id","text","class",'class_label']
         # "usecols" : ["text","class",'class_label',"tweet_id"],
         # "usecols" : ["text","class",'class_label','multi_class',"tweet_id","hashtags"]
     }

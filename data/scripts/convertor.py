@@ -88,7 +88,7 @@ def combine(dataset,data_version):
     return df_total
 
 def remove_low_dimentional_items(df,lowerlimit,upperlimit):
-    for i in range(len(df['tokens'])):
+    for i in range(len(df['tokens'])-1,-1,-1):
         if len(df['tokens'][i]) < lowerlimit or len(df['tokens'][i]) > upperlimit  :
             df.drop(i,inplace=True)
     df.index = range(len(df))
@@ -110,7 +110,15 @@ if __name__=="__main__":
 
     data_version="V02"
     # dataset = "cran-cisi-pubmed"
-    dataset = "mixed"
+    dataset = "cran-cisi-pubmed-overlapped"
+    # dataset = "cran-cisi-pubmed-1000"
+    # dataset = "cran-cisi-pubmed-1000-overlapped"
+    # dataset = "cran-cisi-pubmed-300"
+    # dataset = "cran-cisi-pubmed-300-overlapped"
+    # dataset = "cran-cisi-pubmed-100-overlapped"
+    # dataset = "cran-cisi-pubmed-100"
+    # dataset = "mixed"
+    # dataset = "mixedOverlap"
     # dataset = "bbcsport"
     # dataset = "bbcsport-small"
     # dataset = "cran_pubmed"
@@ -121,7 +129,8 @@ if __name__=="__main__":
     # upperlimit = 35
     upperlimit = 1000
     # limit = 5
-    if len(dataset.split("-"))>1:
+    if len(dataset.split("-"))>1 and False:
+    # if len(dataset.split("-"))>1:
         df = combine(dataset,data_version)
         df = remove_low_dimentional_items(df,lowerlimit,upperlimit)
         rep = create_rep(dataset,df)
@@ -134,6 +143,10 @@ if __name__=="__main__":
         rep = create_rep(dataset,df)
 
     df = convert(data_version,dataset,df,rep)
+    savedatapath = f'../{dataset}_preprocessed_data_{data_version}.pkl'
+    save_data(savedatapath,df)
+    df.to_csv(savedatapath[:-4]+".csv")
+
 
 
 

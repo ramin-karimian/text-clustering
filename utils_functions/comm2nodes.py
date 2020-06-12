@@ -17,6 +17,8 @@ def write_comm2nodes(conf,filename,th,delimiter="\t"):
         for e in cl:
             nodes = e.split(",")
             cid2nodes[i] |= set(nodes)
+            # cid2edges[i].add( nodes )
+    # cid2edges,cid2nodes = dict(cid2edges),dict(cid2nodes)
     cid2nodes = dict(cid2nodes)
 
     # write list of edges for each comm, each comm on its own line
@@ -28,3 +30,4 @@ def write_comm2nodes(conf,filename,th,delimiter="\t"):
         g.write( delimiter.join([strcid] + list(nodes)) )
         g.write( "\n" )
     g.close()
+    return cid2nodes

@@ -6,3 +6,5 @@ data/bbc*
 data/twitter*
 data/scripts/__pycache__/*
 report
+data
+test*

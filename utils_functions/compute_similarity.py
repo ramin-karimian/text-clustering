@@ -28,6 +28,7 @@ def cosineSimilarity(data,name):
     sims = cosine_similarity([x for x in data],[x for x in data])
     sims = np.around(sims.tolist(),2)
     sims_df = pd.DataFrame(sims,index = range(len(sims)), columns= range(len(sims)))
+    sims,sims_df = normalize(sims,sims_df)
     return sims_df,sims
 
 def euclideanSimilarity(data,name):

@@ -13,8 +13,8 @@ def preprcess_func(data,numbers,return_dict,prccName,remove_pos_tags,extend_stop
         text = replaceURL(text) # Technique 1
         text = removeUnicode(text)
         text= replaceEmail(text)
-        # text = removeHashtagInFrontOfWord(text) # Technique 1 # I
-        text = removeHashtagedWords(text) # Technique 1 # I
+        text = removeHashtagInFrontOfWord(text) # Technique 1 # I
+        # text = removeHashtagedWords(text) # Technique 1 # I
         text = replaceSlang(text) # Technique 2: replaces slang words and abbreviations with their equivalents
         text = replaceContraction(text) # Technique 3: replaces contractions to their equivalents
         text = removeNumbers(text) # Technique 4: remove integers from text

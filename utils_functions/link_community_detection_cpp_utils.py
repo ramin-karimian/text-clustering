@@ -1,8 +1,9 @@
 import os
 from collections import defaultdict
-from multiprocessing import Process
+from multiprocessing import Process,Manager
 import subprocess
 from time import time as tm
+from utils_functions.comm2nodes import write_comm2nodes
 
 
 def swap(a,b):
@@ -88,7 +89,6 @@ def calc_jaccards_cpp(conf,start,end,modified_pairsfilepath):
 
 def compute_jaccards_cpp_integrated(conf,filename):
     print ("# loading network from edgelist...")
-    # filename = conf['pairsfilepath'].split("/")[-1]
 
     if conf["is_weighted"]:
         adj,edges,ij2wij = read_edgelist_weighted(conf['pairsfilepath'], delimiter=conf['delimiter'])
@@ -102,12 +102,12 @@ def compute_jaccards_cpp_integrated(conf,filename):
     ln_adj = sum([comb(len(adj[x])) for x in adj])
     ln_adj = int(ln_adj/conf['cores'])
     for c in range(conf['cores']):
-        print(f"core num {c} initiated")
+        # print(f"core num {c} initiated")
         start,end = calc_bounds(conf['cores'],c,prev_end,adj,ln_adj)
         prev_end = end
         p = Process(target=calc_jaccards_cpp,args=(conf,start,end,modified_pairsfilepath))
         p.start()
-        print(f"core num {c} started")
+        # print(f"core num {c} started")
         processes.append(p)
     for p in processes:
         p.join()
@@ -115,17 +115,61 @@ def compute_jaccards_cpp_integrated(conf,filename):
 
 def process_jaccards_files_cpp(folder,fname):
     savepath = f"{folder}/{fname[:-6]}.jaccs"
-    with open(savepath,'w') as f1:
+    # with open(savepath,'w') as f1:
+    with open(savepath,'a') as f1:
         for filename in os.listdir(folder):
             if filename.endswith(".txt"):
-                print(f"filename: {filename}")
+                # print(f"filename: {filename}")
                 datapath = f"{folder}/{filename}"
                 with open(datapath,'r') as f:
-                    lns = f.readlines()
-                    for line in lns:
+                    # lns = f.readlines()
+                    # for line in lns:
+                    line = f.readline()
+                    doc = ""
+                    while line:
+                    # for line in  f.readline():
                         item = line[:-1].split("\t")
                         f1.write(f"{int(item[0])}\t{int(item[1])}\t{int(item[2])}\t{int(item[3])}\t{float(item[4])}\n")
+                        line = f.readline()
                 os.remove(datapath)
+    return savepath
+
+def multiprocess_jaccards_files_cpp_func(folder,filename,returndict):
+    datapath = f"{folder}/{filename}"
+    with open(datapath,'r') as f:
+        # lns = f.readlines()
+        # for line in lns:
+        line = f.readline()
+        doc = ""
+        while line:
+            item = line[:-1].split("\t")
+            doc = doc + f"{int(item[0])}\t{int(item[1])}\t{int(item[2])}\t{int(item[3])}\t{float(item[4])}\n"
+            line = f.readline()
+    returndict[filename] = doc
+    os.remove(datapath)
+
+
+def multiprocess_jaccards_files_cpp(folder,fname):
+    returndict = Manager().dict()
+    processes = []
+    for filename in os.listdir(folder):
+        if filename.endswith(".txt"):
+            # tt = tm()
+            process = Process(target=multiprocess_jaccards_files_cpp_func,args=(folder,filename,returndict))
+            process.start()
+            processes.append(process)
+            # t5 = print_time(tt)
+    for p in processes:
+        p.join()
+
+    keys = returndict.keys()
+    keys = sorted(keys, key=lambda x: int(x.split("_")[0]))
+    savepath = f"{folder}/{fname[:-6]}.jaccs"
+
+    with open(savepath,'w') as f1:
+        for filename in keys:
+            doc = returndict[filename]
+            f1.write(doc)
     return savepath
 
 def run_jaccs_clustering(conf,th,filename):
@@ -138,6 +182,40 @@ def run_jaccs_clustering(conf,th,filename):
     prc = subprocess.Popen(cmd)
     res = prc.communicate()
     return res
+
+
+def jaccs_clustering_multiprocess_func(conf,th,filename,returndict):
+    res = run_jaccs_clustering(conf,th,filename)
+    cid2nodes = write_comm2nodes(conf,filename,th)
+    returndict[th] = cid2nodes
+
+
+def jaccs_clustering_multiprocess(conf,filename,return_dict):
+    returndict = Manager().dict()
+    processes = []
+
+    for th in conf["th_list"]:
+        # tt = tm()
+        process = Process(target=jaccs_clustering_multiprocess_func,args=(conf,th,filename,returndict))
+        process.start()
+        processes.append(process)
+        # t5 = print_time(tt)
+    for p in processes:
+        p.join()
+
+    keys = returndict.keys()
+    keys.sort()
+    for th in keys:
+        for c,ns in returndict[th].items():
+            for n in ns:
+                n = int(n)
+                if f"link_com_{round(th,2)}cut" in return_dict[n]:
+                    return_dict[n][f"link_com_{round(th,2)}cut"] += f",{str(c)}"
+                else:
+                    return_dict[n][f"link_com_{round(th,2)}cut"] = str(c)
+    if conf["delete_jacfile"]:
+        os.remove(f"{conf['resultspath']}/{filename[:-6]}.jaccs")
+    return return_dict
 
 def print_time(t):
     tt = tm()
